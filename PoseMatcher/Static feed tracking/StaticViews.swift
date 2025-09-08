@@ -28,3 +28,33 @@ struct StaticViews: View {
     
     }
 }
+
+import SwiftUI
+import CoreGraphics
+
+struct ParentView: View {
+    // You must provide a value for the image.
+    // Here, we'll use an optional to handle cases where no image is loaded.
+    @State private var loadedCGImage: CGImage? = nil
+
+    var body: some View {
+        VStack {
+            if let cgImage = loadedCGImage {
+                // Pass the loaded CGImage to the StaticViews initializer.
+                StaticViews(image: cgImage)
+            } else {
+                Text("No image selected yet.")
+            }
+
+            // A button or a PhotosPicker to load an image and set `loadedCGImage`
+            // For example:
+            Button("Load Image") {
+                // Replace this with your actual image loading logic.
+                // For demonstration, we'll use a placeholder image.
+                if let uiImage = UIImage(systemName: "photo") {
+                    loadedCGImage = uiImage.cgImage
+                }
+            }
+        }
+    }
+}
