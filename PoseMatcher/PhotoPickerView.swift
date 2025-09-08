@@ -196,42 +196,85 @@
 //    }
 //}
 
+//import SwiftUI
+//import PhotosUI
+//
+//struct PhotoPickerView: View {
+//    @State  var selectedItems = [PhotosPickerItem]() //private
+//    @Binding var selectedImages: [Image]
+//    @State  var selectedCGImages: [CGImage] //private
+//    
+//    var body: some View {
+//        NavigationStack {
+//            ScrollView {
+//                LazyVStack {
+//                    ForEach(0..<selectedImages.count, id: \.self) { i in
+//                        selectedImages[i]
+//                            .resizable()
+//                            .scaledToFit()
+//                            .frame(width: 300, height: 300)
+//                    }
+//                }
+//            }
+//            .toolbar {
+//                PhotosPicker("Select images", selection: $selectedItems, matching: .images)
+//            }
+//            .onChange(of: selectedItems) {
+//                Task {
+//                    selectedImages.removeAll()
+//                    
+//                    for item in selectedItems {
+//                        if let data = try? await item.loadTransferable(type: Data.self),
+//                           let uiImage = UIImage(data: data),
+//                           let cgImage = uiImage.cgImage {
+//                            selectedCGImages.append(cgImage)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+// 
 import SwiftUI
-import PhotosUI
+ import PhotosUI
+ import UIKit // Make sure to import UIKit for UIImage
 
-struct PhotoPickerView: View {
-    @State private var selectedItems = [PhotosPickerItem]()
-    @Binding var selectedImages: [Image]
-    @State private var selectedCGImages: [CGImage]
-    
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVStack {
-                    ForEach(0..<selectedImages.count, id: \.self) { i in
-                        selectedImages[i]
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 300, height: 300)
-                    }
-                }
-            }
-            .toolbar {
-                PhotosPicker("Select images", selection: $selectedItems, matching: .images)
-            }
-            .onChange(of: selectedItems) {
-                Task {
-                    selectedImages.removeAll()
-                    
-                    for item in selectedItems {
-                        if let data = try? await item.loadTransferable(type: Data.self),
-                           let uiImage = UIImage(data: data),
-                           let cgImage = uiImage.cgImage {
-                            selectedCGImages.append(cgImage)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+ struct PhotoPickerView: View {
+     @State private var selectedItems = [PhotosPickerItem]()
+     @Binding var selectedImages: [Image]
+
+     var body: some View {
+         NavigationStack {
+             ScrollView {
+                 LazyVStack {
+                     ForEach(0..<selectedImages.count, id: \.self) { i in
+                         selectedImages[i]
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 300, height: 300)
+                     }
+                 }
+             }
+             .toolbar {
+                 PhotosPicker("Select images", selection: $selectedItems, matching: .images)
+             }
+             .onChange(of: selectedItems) {
+                 Task {
+                     selectedImages.removeAll()
+                     
+                     for item in selectedItems {
+                         // Load the image data and convert to UIImage
+                         if let data = try? await item.loadTransferable(type: Data.self),
+                            let uiImage = UIImage(data: data) {
+                             // Convert the UIImage to a SwiftUI Image and append it directly
+                             // to the correct Binding.
+                             selectedImages.append(Image(uiImage: uiImage))
+                         }
+                     }
+                 }
+             }
+         }
+     }
+ }
