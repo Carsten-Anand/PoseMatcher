@@ -1,25 +1,23 @@
 import SwiftUI
 
 
-
 struct ContentView: View {
-    @State private var images = [CGImage]()
-    @State private var selectedImagesFromPicker: [Image] = []
-
-    
+    @State private var image: CGImage? = nil
     
     var body: some View {
-        HStack{
-           LiveViews()
-            StaticViews(image: Image(<#String#>) as! CGImage)
-            PhotoPickerView(selectedImages: $selectedImagesFromPicker)
-
-            //PhotoPickerView(selectedImages: $images, selectedCGImages: <#[CGImage]#>)
-            StaticViews(image:images as! CGImage)
+        VStack{
+            LiveViews()
+           // StaticViews(image: <#CGImage#>)
+            
+            if let image {
+                StaticViews(image:image)
+            } else {
+                PhotoPickerView( selectedCGImage: $image)
+            }
         }
     }
 }
 
 #Preview {
-   ContentView()
+    ContentView()
 }

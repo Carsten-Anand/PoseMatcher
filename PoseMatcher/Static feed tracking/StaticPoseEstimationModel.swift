@@ -28,61 +28,58 @@ class StaticPoseEstimationViewModel: NSObject, AVCaptureVideoDataOutputSampleBuf
     override init() {
         super.init()
         setupBodyConnections()
-        //    }
+    }
+    
+    // 3.
+    func setupBodyConnections() {
+        bodyConnections = [
+            StaticBodyConnection(from: .nose, to: .neck),
+            StaticBodyConnection(from: .neck, to: .rightShoulder),
+            StaticBodyConnection(from: .neck, to: .leftShoulder),
+            StaticBodyConnection(from: .rightShoulder, to: .rightHip),
+            StaticBodyConnection(from: .leftShoulder, to: .leftHip),
+            StaticBodyConnection(from: .rightHip, to: .leftHip),
+            StaticBodyConnection(from: .rightShoulder, to: .rightElbow),
+            StaticBodyConnection(from: .rightElbow, to: .rightWrist),
+            StaticBodyConnection(from: .leftShoulder, to: .leftElbow),
+            StaticBodyConnection(from: .leftElbow, to: .leftWrist),
+            StaticBodyConnection(from: .rightHip, to: .rightKnee),
+            StaticBodyConnection(from: .rightKnee, to: .rightAnkle),
+            StaticBodyConnection(from: .leftHip, to: .leftKnee),
+            StaticBodyConnection(from: .leftKnee, to: .leftAnkle)
+        ]
+    }
+    
+    
+    // 5.
+    func processFrame(_ image: CGImage) async {
         
-        // 3.
-        func setupBodyConnections() {
-            bodyConnections = [
-                StaticBodyConnection(from: .nose, to: .neck),
-                StaticBodyConnection(from: .neck, to: .rightShoulder),
-                StaticBodyConnection(from: .neck, to: .leftShoulder),
-                StaticBodyConnection(from: .rightShoulder, to: .rightHip),
-                StaticBodyConnection(from: .leftShoulder, to: .leftHip),
-                StaticBodyConnection(from: .rightHip, to: .leftHip),
-                StaticBodyConnection(from: .rightShoulder, to: .rightElbow),
-                StaticBodyConnection(from: .rightElbow, to: .rightWrist),
-                StaticBodyConnection(from: .leftShoulder, to: .leftElbow),
-                StaticBodyConnection(from: .leftElbow, to: .leftWrist),
-                StaticBodyConnection(from: .rightHip, to: .rightKnee),
-                StaticBodyConnection(from: .rightKnee, to: .rightAnkle),
-                StaticBodyConnection(from: .leftHip, to: .leftKnee),
-                StaticBodyConnection(from: .leftKnee, to: .leftAnkle)
-            ]
-        }
+        let request = DetectHumanBodyPoseRequest()
         
-      
-        // 5.
-        func processFrame(_ image: CGImage) async -> [HumanBodyPoseObservation.JointName: CGPoint]? {
-        
-            let request = DetectHumanBodyPoseRequest()
-            
-            do {
-                let results = try await request.perform(on: image)
-                if let observation = results.first {
-                    return extractPoints(from: observation)
-                }
-            } catch {
-                print("Error processing frame: \(error.localizedDescription)")
+        do {
+            let results = try await request.perform(on: image)
+            if let observation = results.first {
+                detectedBodyParts = extractPoints(from: observation)
             }
-            
-            return nil
+        } catch {
+            print("Error processing frame: \(error.localizedDescription)")
         }
+    }
+    
+    // 6.
+    func extractPoints(from observation: HumanBodyPoseObservation) -> [HumanBodyPoseObservation.JointName: CGPoint] {
+        var detectedPoints: [HumanBodyPoseObservation.JointName: CGPoint] = [:]
+        let humanJoints: [HumanBodyPoseObservation.PoseJointsGroupName] = [.face, .torso, .leftArm, .rightArm, .leftLeg, .rightLeg]
         
-        // 6.
-        func extractPoints(from observation: HumanBodyPoseObservation) -> [HumanBodyPoseObservation.JointName: CGPoint] {
-            var detectedPoints: [HumanBodyPoseObservation.JointName: CGPoint] = [:]
-            let humanJoints: [HumanBodyPoseObservation.PoseJointsGroupName] = [.face, .torso, .leftArm, .rightArm, .leftLeg, .rightLeg]
-            
-            for groupName in humanJoints {
-                let jointsInGroup = observation.allJoints(in: groupName)
-                for (jointName, joint) in jointsInGroup {
-                    if joint.confidence > 0.5 { // Ensuring only high-confidence joints are added
-                        let point = joint.location.verticallyFlipped().cgPoint
-                        detectedPoints[jointName] = point
-                    }
+        for groupName in humanJoints {
+            let jointsInGroup = observation.allJoints(in: groupName)
+            for (jointName, joint) in jointsInGroup {
+                if joint.confidence > 0.5 { // Ensuring only high-confidence joints are added
+                    let point = joint.location.verticallyFlipped().cgPoint
+                    detectedPoints[jointName] = point
                 }
             }
-            return detectedPoints
         }
+        return detectedPoints
     }
 }

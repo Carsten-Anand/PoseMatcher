@@ -17,13 +17,17 @@ struct StaticViews: View {
         // 2.
         ZStack {
             // 2a.
-            Image(image, scale: 1.0, label: Text("Text"))
-                .edgesIgnoringSafeArea(.all)
+            Image(uiImage: UIImage(cgImage: image))
+                .resizable()
+                .scaledToFit()
             // 2b.
             StaticPoseOverlayView(
                 bodyParts: poseViewModel.detectedBodyParts,
                 connections: poseViewModel.bodyConnections
             )
+        }
+        .task {
+            await poseViewModel.processFrame(image)
         }
     
     }
